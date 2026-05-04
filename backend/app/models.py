@@ -49,3 +49,35 @@ class Company(Base):
     application_deadline = Column(String(50), nullable=False)
 
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class Application(Base):
+    __tablename__ = "applications"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+
+    status = Column(String(50), default="Applied")
+    remarks = Column(String(255), nullable=True)
+
+    applied_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+    student = relationship("User")
+    company = relationship("Company")
+class DSAProgress(Base):
+    __tablename__ = "dsa_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    topic = Column(String(100), nullable=False)
+    total_questions = Column(Integer, nullable=False)
+    solved_questions = Column(Integer, default=0)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+    student = relationship("User")
