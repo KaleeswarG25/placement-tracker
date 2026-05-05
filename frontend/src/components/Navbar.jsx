@@ -17,6 +17,7 @@ function Navbar() {
                 <Link to="/profile">Profile</Link>
                 <Link to="/companies">Companies</Link>
                 <Link to="/my-applications">My Applications</Link>
+                <Link to="/dsa-progress">DSA Progress</Link>
                 <button onClick={logout}>Logout</button>
             </div>
         </nav>

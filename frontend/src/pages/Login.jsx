@@ -1,16 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../api/api";
 
 function Login() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const [form, setForm] = useState({
-        email: "",
-        password: "",
-    });
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
 
-    const [error, setError] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+
+        if (payload.role === "admin") {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/student-dashboard");
+        }
+      } catch (error) {
+        localStorage.removeItem("token");
+      }
+    }
+  }, [navigate]);
 
     const handleChange = (e) => {
         setForm({
