@@ -65,6 +65,9 @@ def apply_to_company(
     db.commit()
     db.refresh(new_application)
 
+    new_application.student_name = current_user.full_name
+    new_application.company_name = company.company_name
+
     return new_application
 
 
@@ -83,6 +86,10 @@ def get_my_applications(
         models.Application.student_id == current_user.id
     ).order_by(models.Application.applied_at.desc()).all()
 
+    for app in applications:
+        app.student_name = current_user.full_name
+        app.company_name = app.company.company_name
+
     return applications
 
 
@@ -100,6 +107,10 @@ def get_all_applications(
     applications = db.query(models.Application).order_by(
         models.Application.applied_at.desc()
     ).all()
+
+    for app in applications:
+        app.student_name = app.student.full_name
+        app.company_name = app.company.company_name
 
     return applications
 
@@ -148,4 +159,7 @@ def update_application_status(
     db.commit()
     db.refresh(application)
 
-    return application
+    application.student_name = application.student.full_name
+    application.company_name = application.company.company_name
+
+    return application

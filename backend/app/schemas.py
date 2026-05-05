@@ -66,6 +66,8 @@ class CompanyResponse(BaseModel):
     required_skills: str | None = None
     location: str | None = None
     application_deadline: str
+    status: str = "pending"
+    is_active: bool = True
     created_at: datetime
 
     class Config:
@@ -91,7 +93,9 @@ class ApplicationStatusUpdate(BaseModel):
 class ApplicationResponse(BaseModel):
     id: int
     student_id: int
+    student_name: str | None = None
     company_id: int
+    company_name: str | None = None
     status: str
     remarks: str | None = None
     applied_at: datetime

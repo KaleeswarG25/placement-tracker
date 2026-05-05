@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey
+    from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey, Boolean
+
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
@@ -45,7 +46,9 @@ class Company(Base):
     eligible_departments = Column(String(255), nullable=False)
     required_skills = Column(String(255), nullable=True)
 
-    location = Column(String(100), nullable=True)
+    status = Column(String(20), default="pending")
+    is_active = Column(Boolean, default=True)
+
     application_deadline = Column(String(50), nullable=False)
 
     created_at = Column(DateTime, default=datetime.utcnow)

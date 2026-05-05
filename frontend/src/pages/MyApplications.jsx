@@ -1,100 +1,109 @@
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
 import API from "../api/api";
 
 function MyApplications() {
-    const [applications, setApplications] = useState([]);
-    const [companies, setCompanies] = useState([]);
-    const [error, setError] = useState("");
+  const [applications, setApplications] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-    const fetchApplications = async () => {
-        try {
-            const response = await API.get("/applications/my");
-            setApplications(response.data);
-        } catch (err) {
-            setError("Failed to load applications");
-        }
+  const fetchApplications = async () => {
+    try {
+      const response = await API.get("/applications/my");
+      setApplications(response.data);
+    } catch (err) {
+      setError("Failed to load applications");
+    }
+  };
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await API.get("/companies/");
+      setCompanies(response.data);
+    } catch (err) {
+      setError("Failed to load companies");
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchApplications(), fetchCompanies()]);
+      setLoading(false);
     };
+    loadData();
+  }, []);
 
-    const fetchCompanies = async () => {
-        try {
-            const response = await API.get("/companies/");
-            setCompanies(response.data);
-        } catch (err) {
-            setError("Failed to load companies");
-        }
-    };
+  const getCompanyDetails = (companyId) => {
+    return companies.find((item) => item.id === companyId) || {};
+  };
 
-    useEffect(() => {
-        fetchApplications();
-        fetchCompanies();
-    }, []);
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "Selected": return "status-pill success";
+      case "Rejected": return "status-pill danger";
+      case "Shortlisted": return "status-pill info";
+      case "Interview Scheduled": return "status-pill warning";
+      default: return "status-pill neutral";
+    }
+  };
 
-    const getCompanyName = (companyId) => {
-        const company = companies.find((item) => item.id === companyId);
-        return company ? company.company_name : `Company ID ${companyId}`;
-    };
+  if (loading) return <div className="loading-container"><p>Loading your applications...</p></div>;
 
-    const getCompanyRole = (companyId) => {
-        const company = companies.find((item) => item.id === companyId);
-        return company ? company.role : "Role not found";
-    };
+  return (
+    <div className="page-container">
+      <div className="header-section">
+        <h1>My Applications</h1>
+        <p className="subtitle">Track the status of your company applications here.</p>
+      </div>
 
-    const getStatusClass = (status) => {
-        if (status === "Selected") return "badge badge-green";
-        if (status === "Rejected") return "badge badge-red";
-        if (status === "Shortlisted") return "badge badge-blue";
-        if (status === "Interview Scheduled") return "badge badge-yellow";
-        return "badge badge-gray";
-    };
+      {error && <p className="error-msg">{error}</p>}
 
-    return (
-        <>
-            <Navbar />
+      <div className="applications-list">
+        {applications.length === 0 && !error && (
+          <div className="card text-center">
+            <p>You haven't applied to any companies yet.</p>
+            <p className="small">Go to the Companies page to start applying!</p>
+          </div>
+        )}
 
-            <div className="table-container">
-                <h1>My Applications</h1>
+        {applications.map((app) => {
+          const company = getCompanyDetails(app.company_id);
+          return (
+            <div className="application-card card" key={app.id}>
+              <div className="app-header">
+                <div className="company-info">
+                  <h3>{company.company_name || "Unknown Company"}</h3>
+                  <span className="role-text">{company.role || "N/A"}</span>
+                </div>
+                <div className={getStatusClass(app.status)}>
+                  {app.status}
+                </div>
+              </div>
 
-                {error && <p className="error">{error}</p>}
-
-                {applications.length === 0 && !error && (
-                    <p>You have not applied to any company yet.</p>
+              <div className="app-body">
+                <div className="info-row">
+                  <span><strong>Package:</strong> {company.package_lpa || "?"} LPA</span>
+                  <span><strong>Applied On:</strong> {new Date(app.applied_at).toLocaleDateString()}</span>
+                </div>
+                
+                {app.remarks && (
+                  <div className="remarks-box">
+                    <strong>Admin Remarks:</strong>
+                    <p>{app.remarks}</p>
+                  </div>
                 )}
+              </div>
 
-                {applications.map((application) => (
-                    <div className="company-card" key={application.id}>
-                        <h3>{getCompanyName(application.company_id)}</h3>
-
-                        <p>
-                            <strong>Role:</strong> {getCompanyRole(application.company_id)}
-                        </p>
-
-                        <p>
-                            <strong>Status:</strong>{" "}
-                            <span className={getStatusClass(application.status)}>
-                                {application.status}
-                            </span>
-                        </p>
-
-                        <p>
-                            <strong>Remarks:</strong>{" "}
-                            {application.remarks || "No remarks yet"}
-                        </p>
-
-                        <p>
-                            <strong>Applied At:</strong>{" "}
-                            {new Date(application.applied_at).toLocaleString()}
-                        </p>
-
-                        <p>
-                            <strong>Last Updated:</strong>{" "}
-                            {new Date(application.updated_at).toLocaleString()}
-                        </p>
-                    </div>
-                ))}
+              <div className="app-footer">
+                <span className="last-updated">Last update: {new Date(app.updated_at).toLocaleString()}</span>
+              </div>
             </div>
-        </>
-    );
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export default MyApplications;

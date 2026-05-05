@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
 import API from "../api/api";
 
 function DSAProgress() {
   const [progressList, setProgressList] = useState([]);
-
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     topic: "",
     total_questions: "",
@@ -20,6 +19,8 @@ function DSAProgress() {
       setProgressList(response.data);
     } catch (err) {
       setError("Failed to load DSA progress");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,14 +47,8 @@ function DSAProgress() {
         solved_questions: Number(form.solved_questions),
       });
 
-      setMessage("DSA progress saved successfully");
-
-      setForm({
-        topic: "",
-        total_questions: "",
-        solved_questions: "",
-      });
-
+      setMessage("Progress saved successfully!");
+      setForm({ topic: "", total_questions: "", solved_questions: "" });
       fetchProgress();
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to save DSA progress");
@@ -61,15 +56,12 @@ function DSAProgress() {
   };
 
   const deleteProgress = async (progressId) => {
-    setMessage("");
-    setError("");
-
+    if (!window.confirm("Are you sure you want to delete this topic?")) return;
     try {
       await API.delete(`/dsa/${progressId}`);
-      setMessage("DSA progress deleted successfully");
       fetchProgress();
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to delete progress");
+      setError("Failed to delete progress");
     }
   };
 
@@ -79,110 +71,102 @@ function DSAProgress() {
       total_questions: item.total_questions,
       solved_questions: item.solved_questions,
     });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getPercentage = (solved, total) => {
     if (total === 0) return 0;
-    return Math.round((solved / total) * 100);
+    return Math.min(100, Math.round((solved / total) * 100));
   };
 
+  if (loading) return <div className="loading-container"><p>Loading DSA stats...</p></div>;
+
   return (
-    <>
-      <Navbar />
+    <div className="page-container">
+      <div className="header-section">
+        <h1>DSA Mastery Tracker</h1>
+        <p className="subtitle">Monitor your data structures and algorithms preparation progress.</p>
+      </div>
 
-      <div className="table-container">
-        <h1>DSA Progress Tracker</h1>
-
-        {message && <p className="success">{message}</p>}
-        {error && <p className="error">{error}</p>}
-
-        <div className="form-container">
-          <h2>Add / Update Progress</h2>
-
+      <div className="dsa-layout">
+        <div className="card dsa-form-card">
+          <h3>Update Progress</h3>
           <form onSubmit={addOrUpdateProgress}>
-            <input
-              type="text"
-              name="topic"
-              placeholder="Topic e.g. Arrays"
-              value={form.topic}
-              onChange={handleChange}
-              required
-            />
-
-            <input
-              type="number"
-              name="total_questions"
-              placeholder="Total Questions"
-              value={form.total_questions}
-              onChange={handleChange}
-              required
-            />
-
-            <input
-              type="number"
-              name="solved_questions"
-              placeholder="Solved Questions"
-              value={form.solved_questions}
-              onChange={handleChange}
-              required
-            />
-
-            <button type="submit">Save Progress</button>
+            <div className="form-group">
+              <label>Topic Name</label>
+              <input
+                type="text"
+                name="topic"
+                placeholder="e.g. Arrays, Dynamic Programming"
+                value={form.topic}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Total Questions</label>
+                <input
+                  type="number"
+                  name="total_questions"
+                  placeholder="0"
+                  value={form.total_questions}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Solved</label>
+                <input
+                  type="number"
+                  name="solved_questions"
+                  placeholder="0"
+                  value={form.solved_questions}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary block">Save Topic Progress</button>
           </form>
+          {message && <p className="success-msg mt-2">{message}</p>}
+          {error && <p className="error-msg mt-2">{error}</p>}
         </div>
 
-        <h2>My DSA Topics</h2>
-
-        {progressList.length === 0 && (
-          <p>No DSA progress added yet.</p>
-        )}
-
-        {progressList.map((item) => {
-          const percentage = getPercentage(
-            item.solved_questions,
-            item.total_questions
-          );
-
-          return (
-            <div className="company-card" key={item.id}>
-              <h3>{item.topic}</h3>
-
-              <p>
-                <strong>Solved:</strong> {item.solved_questions} /{" "}
-                {item.total_questions}
-              </p>
-
-              <p>
-                <strong>Completion:</strong> {percentage}%
-              </p>
-
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${percentage}%` }}
-                >
-                  {percentage}%
-                </div>
-              </div>
-
-              <button
-                className="secondary-btn"
-                onClick={() => editProgress(item)}
-              >
-                Edit
-              </button>
-
-              <button
-                className="danger-btn"
-                onClick={() => deleteProgress(item.id)}
-              >
-                Delete
-              </button>
+        <div className="dsa-list">
+          <h3>Your Topics</h3>
+          {progressList.length === 0 ? (
+            <p className="empty-msg">No topics added yet. Start by adding one!</p>
+          ) : (
+            <div className="topics-grid">
+              {progressList.map((item) => {
+                const percentage = getPercentage(item.solved_questions, item.total_questions);
+                return (
+                  <div className="topic-card card" key={item.id}>
+                    <div className="topic-header">
+                      <h4>{item.topic}</h4>
+                      <div className="topic-actions">
+                        <button className="icon-btn edit" onClick={() => editProgress(item)} title="Edit">✎</button>
+                        <button className="icon-btn delete" onClick={() => deleteProgress(item.id)} title="Delete">🗑</button>
+                      </div>
+                    </div>
+                    <div className="topic-stats">
+                      <span>{item.solved_questions} / {item.total_questions} Solved</span>
+                      <span>{percentage}%</span>
+                    </div>
+                    <div className="progress-container">
+                      <div className="progress-bar-bg">
+                        <div className="progress-bar-fill" style={{ width: `${percentage}%` }}></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          )}
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 

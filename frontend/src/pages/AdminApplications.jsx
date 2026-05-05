@@ -1,172 +1,154 @@
 import { useEffect, useState } from "react";
-import AdminNavbar from "../components/AdminNavbar";
 import API from "../api/api";
 
 function AdminApplications() {
-    const [applications, setApplications] = useState([]);
-    const [companies, setCompanies] = useState([]);
-    const [statusForm, setStatusForm] = useState({});
-    const [message, setMessage] = useState("");
-    const [error, setError] = useState("");
+  const [applications, setApplications] = useState([]);
+  const [statusForm, setStatusForm] = useState({});
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-    const statusOptions = [
-        "Applied",
-        "Shortlisted",
-        "Interview Scheduled",
-        "Rejected",
-        "Selected",
-    ];
+  const statusOptions = [
+    "Applied",
+    "Shortlisted",
+    "Interview Scheduled",
+    "Rejected",
+    "Selected",
+  ];
 
-    const fetchApplications = async () => {
-        try {
-            const response = await API.get("/applications/all");
-            setApplications(response.data);
+  const fetchApplications = async () => {
+    try {
+      const response = await API.get("/applications/all");
+      setApplications(response.data);
 
-            const initialStatus = {};
+      const initialStatus = {};
+      response.data.forEach((app) => {
+        initialStatus[app.id] = {
+          status: app.status,
+          remarks: app.remarks || "",
+        };
+      });
+      setStatusForm(initialStatus);
+    } catch (err) {
+      setError("Failed to load student applications");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            response.data.forEach((application) => {
-                initialStatus[application.id] = {
-                    status: application.status,
-                    remarks: application.remarks || "",
-                };
-            });
+  useEffect(() => {
+    fetchApplications();
+  }, []);
 
-            setStatusForm(initialStatus);
-        } catch (err) {
-            setError("Failed to load applications");
-        }
-    };
+  const handleStatusChange = (appId, field, value) => {
+    setStatusForm({
+      ...statusForm,
+      [appId]: {
+        ...statusForm[appId],
+        [field]: value,
+      },
+    });
+  };
 
-    const fetchCompanies = async () => {
-        try {
-            const response = await API.get("/companies/");
-            setCompanies(response.data);
-        } catch (err) {
-            setError("Failed to load companies");
-        }
-    };
+  const updateStatus = async (appId) => {
+    setMessage("");
+    setError("");
 
-    useEffect(() => {
-        fetchApplications();
-        fetchCompanies();
-    }, []);
+    try {
+      await API.put(`/applications/${appId}/status`, {
+        status: statusForm[appId].status,
+        remarks: statusForm[appId].remarks,
+      });
 
-    const getCompanyName = (companyId) => {
-        const company = companies.find((item) => item.id === companyId);
-        return company ? company.company_name : `Company ID ${companyId}`;
-    };
+      setMessage("Application status updated successfully!");
+      fetchApplications();
+      window.scrollTo(0, 0);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to update status");
+    }
+  };
 
-    const getCompanyRole = (companyId) => {
-        const company = companies.find((item) => item.id === companyId);
-        return company ? company.role : "Role not found";
-    };
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "Selected": return "status-pill success";
+      case "Rejected": return "status-pill danger";
+      case "Shortlisted": return "status-pill info";
+      case "Interview Scheduled": return "status-pill warning";
+      default: return "status-pill neutral";
+    }
+  };
 
-    const handleStatusChange = (applicationId, field, value) => {
-        setStatusForm({
-            ...statusForm,
-            [applicationId]: {
-                ...statusForm[applicationId],
-                [field]: value,
-            },
-        });
-    };
+  if (loading) return <div className="loading-container"><p>Loading applications...</p></div>;
 
-    const updateStatus = async (applicationId) => {
-        setMessage("");
-        setError("");
+  return (
+    <div className="page-container">
+      <div className="header-section">
+        <h1>Manage Applications</h1>
+        <p className="subtitle">Review student applications and update their placement status.</p>
+      </div>
 
-        try {
-            await API.put(`/applications/${applicationId}/status`, {
-                status: statusForm[applicationId].status,
-                remarks: statusForm[applicationId].remarks,
-            });
+      {message && <p className="success-msg">{message}</p>}
+      {error && <p className="error-msg">{error}</p>}
 
-            setMessage("Application status updated successfully");
-            fetchApplications();
-        } catch (err) {
-            setError(err.response?.data?.detail || "Failed to update status");
-        }
-    };
+      <div className="admin-applications-list">
+        {applications.length === 0 && !error && (
+          <p className="empty-msg">No applications received yet.</p>
+        )}
 
-    const getStatusClass = (status) => {
-        if (status === "Selected") return "badge badge-green";
-        if (status === "Rejected") return "badge badge-red";
-        if (status === "Shortlisted") return "badge badge-blue";
-        if (status === "Interview Scheduled") return "badge badge-yellow";
-        return "badge badge-gray";
-    };
-
-    return (
-        <>
-            <AdminNavbar />
-
-            <div className="table-container">
-                <h1>Student Applications</h1>
-
-                {message && <p className="success">{message}</p>}
-                {error && <p className="error">{error}</p>}
-
-                {applications.length === 0 && !error && (
-                    <p>No applications found.</p>
-                )}
-
-                {applications.map((application) => (
-                    <div className="company-card" key={application.id}>
-                        <h3>{getCompanyName(application.company_id)}</h3>
-
-                        <p>
-                            <strong>Role:</strong> {getCompanyRole(application.company_id)}
-                        </p>
-
-                        <p>
-                            <strong>Student ID:</strong> {application.student_id}
-                        </p>
-
-                        <p>
-                            <strong>Current Status:</strong>{" "}
-                            <span className={getStatusClass(application.status)}>
-                                {application.status}
-                            </span>
-                        </p>
-
-                        <p>
-                            <strong>Applied At:</strong>{" "}
-                            {new Date(application.applied_at).toLocaleString()}
-                        </p>
-
-                        <select
-                            value={statusForm[application.id]?.status || application.status}
-                            onChange={(e) =>
-                                handleStatusChange(application.id, "status", e.target.value)
-                            }
-                        >
-                            {statusOptions.map((status) => (
-                                <option value={status} key={status}>
-                                    {status}
-                                </option>
-                            ))}
-                        </select>
-
-                        <input
-                            type="text"
-                            placeholder="Remarks"
-                            value={statusForm[application.id]?.remarks || ""}
-                            onChange={(e) =>
-                                handleStatusChange(application.id, "remarks", e.target.value)
-                            }
-                        />
-
-                        <button
-                            className="secondary-btn"
-                            onClick={() => updateStatus(application.id)}
-                        >
-                            Update Status
-                        </button>
-                    </div>
-                ))}
+        {applications.map((app) => (
+          <div className="application-card card" key={app.id}>
+            <div className="app-header">
+              <div className="student-info">
+                <h3>{app.student_name}</h3>
+                <span className="small-text">Applied to: <strong>{app.company_name}</strong></span>
+              </div>
+              <div className={getStatusClass(app.status)}>
+                {app.status}
+              </div>
             </div>
-        </>
-    );
+
+            <div className="app-body admin-controls">
+              <div className="info-grid">
+                <p><strong>Student ID:</strong> {app.student_id}</p>
+                <p><strong>Applied On:</strong> {new Date(app.applied_at).toLocaleDateString()}</p>
+              </div>
+
+              <div className="update-form mt-2">
+                <div className="form-row">
+                  <div className="form-group flex-1">
+                    <label>Update Status</label>
+                    <select
+                      value={statusForm[app.id]?.status || app.status}
+                      onChange={(e) => handleStatusChange(app.id, "status", e.target.value)}
+                    >
+                      {statusOptions.map((opt) => (
+                        <option value={opt} key={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group flex-2">
+                    <label>Remarks</label>
+                    <input
+                      type="text"
+                      placeholder="Add interview link or feedback..."
+                      value={statusForm[app.id]?.remarks || ""}
+                      onChange={(e) => handleStatusChange(app.id, "remarks", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <button
+                  className="btn btn-secondary mt-1"
+                  onClick={() => updateStatus(app.id)}
+                >
+                  Save Status Update
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default AdminApplications;

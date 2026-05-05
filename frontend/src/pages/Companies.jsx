@@ -1,135 +1,120 @@
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
 import API from "../api/api";
 
 function Companies() {
-    const [companies, setCompanies] = useState([]);
-    const [eligibility, setEligibility] = useState([]);
-    const [message, setMessage] = useState("");
-    const [error, setError] = useState("");
+  const [companies, setCompanies] = useState([]);
+  const [eligibility, setEligibility] = useState([]);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-    const fetchCompanies = async () => {
-        try {
-            const response = await API.get("/companies/");
-            setCompanies(response.data);
-        } catch (err) {
-            setError("Failed to load companies");
-        }
+  const fetchCompanies = async () => {
+    try {
+      const response = await API.get("/companies/");
+      setCompanies(response.data);
+    } catch (err) {
+      setError("Failed to load companies");
+    }
+  };
+
+  const fetchEligibility = async () => {
+    try {
+      const response = await API.get("/eligibility/all");
+      setEligibility(response.data);
+    } catch (err) {
+      // If student hasn't created a profile, eligibility fetch might fail
+      console.log("Eligibility fetch skipped or failed - student profile likely missing.");
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchCompanies(), fetchEligibility()]);
+      setLoading(false);
     };
+    loadData();
+  }, []);
 
-    const fetchEligibility = async () => {
-        try {
-            const response = await API.get("/eligibility/all");
-            setEligibility(response.data);
-        } catch (err) {
-            setError("Create your student profile first to check eligibility");
-        }
-    };
+  const getEligibility = (companyId) => {
+    return eligibility.find((item) => item.company_id === companyId);
+  };
 
-    useEffect(() => {
-        fetchCompanies();
-        fetchEligibility();
-    }, []);
+  const applyToCompany = async (companyId) => {
+    setMessage("");
+    setError("");
 
-    const getEligibility = (companyId) => {
-        return eligibility.find((item) => item.company_id === companyId);
-    };
+    try {
+      await API.post("/applications/apply", {
+        company_id: companyId,
+      });
+      setMessage("Application submitted successfully!");
+      // Scroll to top to see message
+      window.scrollTo(0, 0);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to apply");
+    }
+  };
 
-    const applyToCompany = async (companyId) => {
-        setMessage("");
-        setError("");
+  if (loading) return <div className="loading-container"><p>Loading companies...</p></div>;
 
-        try {
-            await API.post("/applications/apply", {
-                company_id: companyId,
-            });
+  return (
+    <div className="page-container">
+      <div className="header-section">
+        <h1>Available Companies</h1>
+        <p className="subtitle">Check your eligibility and apply for upcoming placements.</p>
+      </div>
 
-            setMessage("Application submitted successfully");
-        } catch (err) {
-            setError(err.response?.data?.detail || "Failed to apply");
-        }
-    };
+      {message && <p className="success-msg">{message}</p>}
+      {error && <p className="error-msg">{error}</p>}
 
-    return (
-        <>
-            <Navbar />
+      <div className="company-grid">
+        {companies.length === 0 && <p className="empty-msg">No companies found at the moment.</p>}
 
-            <div className="table-container">
-                <h1>Companies</h1>
+        {companies.map((company) => {
+          const result = getEligibility(company.id);
+          const isEligible = result ? result.eligible : false;
 
-                {message && <p className="success">{message}</p>}
-                {error && <p className="error">{error}</p>}
+          return (
+            <div className={`company-card ${result ? (isEligible ? 'eligible' : 'ineligible') : ''}`} key={company.id}>
+              <div className="company-header">
+                <h3>{company.company_name}</h3>
+                <span className="package-badge">{company.package_lpa} LPA</span>
+              </div>
 
-                {companies.length === 0 && <p>No companies found.</p>}
+              <div className="company-details">
+                <p><strong>Role:</strong> {company.role}</p>
+                <p><strong>Location:</strong> {company.location || "TBD"}</p>
+                <p><strong>Min CGPA:</strong> {company.required_cgpa}</p>
+                <p><strong>Deadline:</strong> {new Date(company.application_deadline).toLocaleDateString()}</p>
+              </div>
 
-                {companies.map((company) => {
-                    const result = getEligibility(company.id);
+              <div className="eligibility-info">
+                {result ? (
+                  <>
+                    <div className={`status-pill ${isEligible ? 'success' : 'danger'}`}>
+                      {isEligible ? "✓ Eligible" : "✕ Not Eligible"}
+                    </div>
+                    {!isEligible && <p className="reason">Reason: {result.reason}</p>}
+                  </>
+                ) : (
+                  <p className="info-msg small">Complete your profile to see eligibility.</p>
+                )}
+              </div>
 
-                    return (
-                        <div className="company-card" key={company.id}>
-                            <h3>{company.company_name}</h3>
-
-                            <p>
-                                <strong>Role:</strong> {company.role}
-                            </p>
-
-                            <p>
-                                <strong>Package:</strong> {company.package_lpa} LPA
-                            </p>
-
-                            <p>
-                                <strong>Required CGPA:</strong> {company.required_cgpa}
-                            </p>
-
-                            <p>
-                                <strong>Eligible Departments:</strong>{" "}
-                                {company.eligible_departments}
-                            </p>
-
-                            <p>
-                                <strong>Required Skills:</strong>{" "}
-                                {company.required_skills || "Not specified"}
-                            </p>
-
-                            <p>
-                                <strong>Location:</strong> {company.location || "Not specified"}
-                            </p>
-
-                            <p>
-                                <strong>Deadline:</strong> {company.application_deadline}
-                            </p>
-
-                            {result && (
-                                <>
-                                    <span
-                                        className={
-                                            result.eligible
-                                                ? "badge badge-green"
-                                                : "badge badge-red"
-                                        }
-                                    >
-                                        {result.eligible ? "Eligible" : "Not Eligible"}
-                                    </span>
-
-                                    <p>
-                                        <strong>Reason:</strong> {result.reason}
-                                    </p>
-                                </>
-                            )}
-
-                            <button
-                                className="secondary-btn"
-                                onClick={() => applyToCompany(company.id)}
-                                disabled={result && !result.eligible}
-                            >
-                                Apply
-                            </button>
-                        </div>
-                    );
-                })}
+              <button
+                className={`btn ${isEligible ? 'btn-primary' : 'btn-disabled'}`}
+                onClick={() => applyToCompany(company.id)}
+                disabled={result && !isEligible}
+              >
+                {isEligible ? "Apply Now" : "Cannot Apply"}
+              </button>
             </div>
-        </>
-    );
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export default Companies;

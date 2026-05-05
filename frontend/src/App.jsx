@@ -10,6 +10,7 @@ import AddCompany from "./pages/AddCompany";
 import AdminApplications from "./pages/AdminApplications";
 import DSAProgress from "./pages/DSAProgress";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
 
 function App() {
   return (
@@ -23,7 +24,9 @@ function App() {
         path="/student-dashboard"
         element={
           <ProtectedRoute allowedRole="student">
-            <StudentDashboard />
+            <Layout>
+              <StudentDashboard />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -32,7 +35,9 @@ function App() {
         path="/profile"
         element={
           <ProtectedRoute allowedRole="student">
-            <StudentProfile />
+            <Layout>
+              <StudentProfile />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -41,7 +46,9 @@ function App() {
         path="/companies"
         element={
           <ProtectedRoute allowedRole="student">
-            <Companies />
+            <Layout>
+              <Companies />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -50,7 +57,9 @@ function App() {
         path="/my-applications"
         element={
           <ProtectedRoute allowedRole="student">
-            <MyApplications />
+            <Layout>
+              <MyApplications />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -59,7 +68,9 @@ function App() {
         path="/dsa-progress"
         element={
           <ProtectedRoute allowedRole="student">
-            <DSAProgress />
+            <Layout>
+              <DSAProgress />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -68,7 +79,9 @@ function App() {
         path="/admin-dashboard"
         element={
           <ProtectedRoute allowedRole="admin">
-            <AdminDashboard />
+            <Layout>
+              <AdminDashboard />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -77,7 +90,9 @@ function App() {
         path="/admin/add-company"
         element={
           <ProtectedRoute allowedRole="admin">
-            <AddCompany />
+            <Layout>
+              <AddCompany />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -86,7 +101,9 @@ function App() {
         path="/admin/applications"
         element={
           <ProtectedRoute allowedRole="admin">
-            <AdminApplications />
+            <Layout>
+              <AdminApplications />
+            </Layout>
           </ProtectedRoute>
         }
       />
