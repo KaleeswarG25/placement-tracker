@@ -25,7 +25,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://main.xxxxxx.amplifyapp.com"
+        "https://main.d35nlzkc6g8b7g.amplifyapp.com"
     ],
     allow_credentials=False,
     allow_methods=["*"],
