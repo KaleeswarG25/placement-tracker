@@ -1,11 +1,22 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import Optional, List
 
 class UserRegister(BaseModel):
     full_name: str
     email: EmailStr
     password: str
     role: str = "student"
+    phone: Optional[str] = None
+    rollno: Optional[str] = None
+    
+    # For company specific registration
+    company_name: Optional[str] = None
+    hr_name: Optional[str] = None
+    website: Optional[str] = None
+    location: Optional[str] = None
+    industry: Optional[str] = None
+    description: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -16,6 +27,7 @@ class UserResponse(BaseModel):
     full_name: str
     email: EmailStr
     role: str
+    status: str
     created_at: datetime
 
     class Config:
@@ -26,125 +38,142 @@ class Token(BaseModel):
     token_type: str
 
 class StudentProfileCreate(BaseModel):
-    department: str
-    cgpa: float
-    skills: str | None = None
-    backlog_count: int = 0
-    resume_url: str | None = None
-
+    department: Optional[str] = None
+    year: Optional[int] = None
+    cgpa: Optional[float] = 0.0
+    backlog_count: Optional[int] = 0
+    phone: Optional[str] = None
+    skills: Optional[str] = None
+    projects: Optional[str] = None
+    address: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
+    portfolio: Optional[str] = None
 
 class StudentProfileResponse(BaseModel):
     id: int
     user_id: int
-    department: str
-    cgpa: float
-    skills: str | None = None
-    backlog_count: int
-    resume_url: str | None = None
-    created_at: datetime
+    rollno: Optional[str] = None
+    department: Optional[str] = None
+    year: Optional[int] = None
+    cgpa: Optional[float] = None
+    backlog_count: Optional[int] = 0
+    skills: Optional[str] = None
+    projects: Optional[str] = None
+    address: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
+    portfolio: Optional[str] = None
+    resume_path: Optional[str] = None
 
     class Config:
         from_attributes = True
-class CompanyCreate(BaseModel):
-    company_name: str
-    role: str
-    package_lpa: float
-    required_cgpa: float
-    eligible_departments: str
-    required_skills: str | None = None
-    location: str | None = None
-    application_deadline: str
 
-
-class CompanyResponse(BaseModel):
+class CompanyProfileResponse(BaseModel):
     id: int
+    user_id: int
     company_name: str
-    role: str
-    package_lpa: float
-    required_cgpa: float
-    eligible_departments: str
-    required_skills: str | None = None
-    location: str | None = None
-    application_deadline: str
-    status: str = "pending"
-    is_active: bool = True
-    created_at: datetime
+    hr_name: Optional[str] = None
+    website: Optional[str] = None
+    location: Optional[str] = None
+    industry: Optional[str] = None
+    description: Optional[str] = None
+    linkedin: Optional[str] = None
+    logo_path: Optional[str] = None
+    approved_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
 
-class EligibilityResponse(BaseModel):
-    company_id: int
-    company_name: str
-    role: str
-    required_cgpa: float
-    student_cgpa: float
-    eligible: bool
-    reason: str
-class ApplicationCreate(BaseModel):
-    company_id: int
+class JobOpeningCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    skills_required: Optional[str] = None
+    min_cgpa: Optional[float] = 0.0
+    eligible_departments: str
+    batch_year: Optional[str] = None
+    location: Optional[str] = None
+    ctc: Optional[str] = None
+    job_type: Optional[str] = None
+    vacancies: Optional[int] = None
+    selection_process: Optional[str] = None
+    last_date: Optional[datetime] = None
 
+class JobOpeningResponse(BaseModel):
+    id: int
+    company_id: int
+    title: str
+    description: Optional[str] = None
+    skills_required: Optional[str] = None
+    min_cgpa: Optional[float] = None
+    eligible_departments: str
+    batch_year: Optional[str] = None
+    location: Optional[str] = None
+    ctc: Optional[str] = None
+    job_type: Optional[str] = None
+    vacancies: Optional[int] = None
+    selection_process: Optional[str] = None
+    last_date: Optional[datetime] = None
+    status: str
+    created_at: datetime
+    company: Optional[CompanyProfileResponse] = None
+
+    class Config:
+        from_attributes = True
+
+class ApplicationCreate(BaseModel):
+    job_id: int
 
 class ApplicationStatusUpdate(BaseModel):
     status: str
-    remarks: str | None = None
-
 
 class ApplicationResponse(BaseModel):
     id: int
     student_id: int
-    student_name: str | None = None
+    job_id: int
     company_id: int
-    company_name: str | None = None
+    resume_path: Optional[str] = None
     status: str
-    remarks: str | None = None
     applied_at: datetime
     updated_at: datetime
+    student: Optional[UserResponse] = None
+    job: Optional[JobOpeningResponse] = None
 
     class Config:
         from_attributes = True
-class StudentDashboardResponse(BaseModel):
-    total_companies: int
-    eligible_companies: int
-    total_applications: int
-    shortlisted_count: int
-    interview_count: int
-    rejected_count: int
-    selected_count: int
 
-    total_dsa_topics: int
-    total_dsa_questions: int
-    solved_dsa_questions: int
-    dsa_completion_percentage: float
+class AnnouncementCreate(BaseModel):
+    title: str
+    message: str
+    target_audience: str = "all"
+
+class AnnouncementResponse(BaseModel):
+    id: int
+    title: str
+    message: str
+    target_audience: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class StudentDashboardResponse(BaseModel):
+    eligible_openings: int
+    applied_openings: int
+    shortlisted_applications: int
+    rejected_applications: int
+
+class CompanyDashboardResponse(BaseModel):
+    total_openings: int
+    total_applications: int
+    shortlisted_candidates: int
+    pending_applications: int
 
 class AdminDashboardResponse(BaseModel):
     total_students: int
     total_companies: int
+    pending_approvals: int
+    total_jobs: int
     total_applications: int
-    applied_count: int
-    shortlisted_count: int
-    interview_count: int
-    rejected_count: int
-    selected_count: int
-class DSAProgressCreate(BaseModel):
-    topic: str
-    total_questions: int
-    solved_questions: int = 0
-
-
-class DSAProgressUpdate(BaseModel):
-    total_questions: int
-    solved_questions: int
-
-
-class DSAProgressResponse(BaseModel):
-    id: int
-    student_id: int
-    topic: str
-    total_questions: int
-    solved_questions: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
+    banned_students: int
+    approved_companies: int

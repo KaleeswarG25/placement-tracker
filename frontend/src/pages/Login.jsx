@@ -1,99 +1,50 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import API from "../api/api";
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import api from '../api/config';
 
-function Login() {
+export default function Login({ setRole }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        navigate(payload.role === "admin" ? "/admin-dashboard" : "/student-dashboard");
-      } catch (error) {
-        localStorage.removeItem("token");
-      }
-    }
-  }, [navigate]);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
     try {
-      const formData = new FormData();
-      formData.append("username", form.email);
-      formData.append("password", form.password);
-
-      const response = await API.post("/users/login", formData);
-      localStorage.setItem("token", response.data.access_token);
-
-      const payload = JSON.parse(atob(response.data.access_token.split(".")[1]));
-      navigate(payload.role === "admin" ? "/admin-dashboard" : "/student-dashboard");
+      const res = await api.post('/auth/login', { email, password });
+      localStorage.setItem('token', res.data.access_token);
+      localStorage.setItem('role', res.data.role);
+      setRole(res.data.role);
+      navigate(`/${res.data.role}`);
     } catch (err) {
-      setError("Invalid email or password. Please try again.");
-    } finally {
-      setLoading(false);
+      setError(err.response?.data?.detail || "Login failed");
     }
   };
 
   return (
-    <div className="page">
-      <div className="card auth-card">
-        <div className="auth-header">
-          <h1>Welcome Back</h1>
-          <p className="subtitle">Sign in to your placement account</p>
-        </div>
-
-        {error && <p className="error-msg">{error}</p>}
-
-        <form onSubmit={handleLogin}>
-          <div className="form-group">
-            <label>Email Address</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="name@university.edu"
-              value={form.email}
-              onChange={handleChange}
-              required
-              disabled={loading}
-            />
+    <div className="flex items-center justify-center min-h-[80vh]">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+        <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-8">Welcome Back</h2>
+        {error && <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 text-sm border border-red-100">{error}</div>}
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <input type="email" required value={email} onChange={(e)=>setEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
           </div>
-
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={handleChange}
-              required
-              disabled={loading}
-            />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" required value={password} onChange={(e)=>setPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
           </div>
-
-          <button type="submit" className="btn btn-primary block mt-1" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
+          <button type="submit" className="w-full bg-indigo-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-indigo-700 transition shadow-sm hover:shadow-md">
+            Sign In
           </button>
         </form>
-
-        <div className="auth-footer">
-          <p>New to the platform? <Link to="/register">Create an account</Link></p>
-        </div>
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Don't have an account? <Link to="/register" className="text-indigo-600 font-semibold hover:text-indigo-800">Create one</Link>
+        </p>
       </div>
     </div>
   );
 }
-
-export default Login;

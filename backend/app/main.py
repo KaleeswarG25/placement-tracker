@@ -1,44 +1,31 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from .database import engine, Base
-from . import models
-from .routes import (
-    user_routes,
-    profile_routes,
-    company_routes,
-    eligibility_routes,
-    application_routes,
-    dashboard_routes,
-    dsa_routes
-)
+from .routes.api import router
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 Base.metadata.create_all(bind=engine)
 
-import os
+os.makedirs("uploads", exist_ok=True)
 
 app = FastAPI(title="Student Placement Tracker API")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-# Configure CORS
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://main.d35nlzkc6g8b7g.amplifyapp.com"
-    ],
-    allow_credentials=False,
+    allow_origins=["*"], # In production, restrict this
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(user_routes.router)
-app.include_router(profile_routes.router)
-app.include_router(company_routes.router)
-app.include_router(eligibility_routes.router)
-app.include_router(application_routes.router)
-app.include_router(dashboard_routes.router)
-app.include_router(dsa_routes.router)
+app.include_router(router)
 
 @app.get("/")
 def home():

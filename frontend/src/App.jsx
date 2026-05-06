@@ -1,114 +1,36 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import StudentDashboard from "./pages/StudentDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import StudentProfile from "./pages/StudentProfile";
-import Companies from "./pages/Companies";
-import MyApplications from "./pages/MyApplications";
-import AddCompany from "./pages/AddCompany";
-import AdminApplications from "./pages/AdminApplications";
-import DSAProgress from "./pages/DSAProgress";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Layout from "./components/Layout";
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import StudentDashboard from './pages/StudentDashboard';
+import CompanyDashboard from './pages/CompanyDashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import Navbar from './components/Navbar';
 
 function App() {
+  const [role, setRole] = useState(localStorage.getItem('role'));
+
+  useEffect(() => {
+    const handleStorageChange = () => setRole(localStorage.getItem('role'));
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
-
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-
-      <Route
-        path="/student-dashboard"
-        element={
-          <ProtectedRoute allowedRole="student">
-            <Layout>
-              <StudentDashboard />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute allowedRole="student">
-            <Layout>
-              <StudentProfile />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/companies"
-        element={
-          <ProtectedRoute allowedRole="student">
-            <Layout>
-              <Companies />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/my-applications"
-        element={
-          <ProtectedRoute allowedRole="student">
-            <Layout>
-              <MyApplications />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/dsa-progress"
-        element={
-          <ProtectedRoute allowedRole="student">
-            <Layout>
-              <DSAProgress />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/admin-dashboard"
-        element={
-          <ProtectedRoute allowedRole="admin">
-            <Layout>
-              <AdminDashboard />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/admin/add-company"
-        element={
-          <ProtectedRoute allowedRole="admin">
-            <Layout>
-              <AddCompany />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/admin/applications"
-        element={
-          <ProtectedRoute allowedRole="admin">
-            <Layout>
-              <AdminApplications />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+      <div className="min-h-screen bg-gray-50 text-gray-900 font-sans flex flex-col">
+        {role && <Navbar role={role} setRole={setRole} />}
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/login" element={<Login setRole={setRole} />} />
+            <Route path="/register" element={<Register />} />
+            {role === 'student' && <Route path="/student/*" element={<StudentDashboard />} />}
+            {role === 'company' && <Route path="/company/*" element={<CompanyDashboard />} />}
+            {role === 'admin' && <Route path="/admin/*" element={<AdminDashboard />} />}
+            <Route path="*" element={<Navigate to={role ? `/${role}` : "/login"} />} />
+          </Routes>
+        </main>
+      </div>
   );
 }
-
 export default App;

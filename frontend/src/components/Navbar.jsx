@@ -1,74 +1,27 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import React from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
-function Navbar() {
+export default function Navbar({ role, setRole }) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [role, setRole] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        setRole(payload.role);
-      } catch (error) {
-        console.error("Error decoding token:", error);
-      }
-    }
-  }, [location]);
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+  const handleLogout = () => {
+    localStorage.clear();
+    setRole(null);
+    navigate('/login');
   };
 
-  const isActive = (path) => (location.pathname === path ? "active" : "");
-
   return (
-    <nav className="navbar">
-      <div className="nav-brand">
-        <h2>{role === "admin" ? "Placement Admin" : "Placement Tracker"}</h2>
-      </div>
-
-      <div className="nav-links">
-        {role === "admin" ? (
-          <>
-            <Link to="/admin-dashboard" className={isActive("/admin-dashboard")}>
-              Dashboard
-            </Link>
-            <Link to="/admin/add-company" className={isActive("/admin/add-company")}>
-              Add Company
-            </Link>
-            <Link to="/admin/applications" className={isActive("/admin/applications")}>
-              Applications
-            </Link>
-          </>
-        ) : (
-          <>
-            <Link to="/student-dashboard" className={isActive("/student-dashboard")}>
-              Dashboard
-            </Link>
-            <Link to="/profile" className={isActive("/profile")}>
-              Profile
-            </Link>
-            <Link to="/companies" className={isActive("/companies")}>
-              Companies
-            </Link>
-            <Link to="/my-applications" className={isActive("/my-applications")}>
-              My Applications
-            </Link>
-            <Link to="/dsa-progress" className={isActive("/dsa-progress")}>
-              DSA Progress
-            </Link>
-          </>
-        )}
-        <button className="logout-btn" onClick={logout}>
-          Logout
-        </button>
+    <nav className="bg-white shadow-sm border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link to={`/${role}`} className="text-xl font-bold text-indigo-600">Placement Tracker</Link>
+          </div>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-500 capitalize px-3 py-1 bg-gray-100 rounded-full">{role}</span>
+            <button onClick={handleLogout} className="text-sm font-medium text-red-600 hover:text-red-800 transition">Logout</button>
+          </div>
+        </div>
       </div>
     </nav>
   );
 }
-
-export default Navbar;
