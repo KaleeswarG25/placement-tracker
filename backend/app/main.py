@@ -23,7 +23,10 @@ allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://main.xxxxxx.amplifyapp.com"
+    ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
