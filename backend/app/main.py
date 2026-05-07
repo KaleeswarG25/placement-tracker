@@ -15,11 +15,14 @@ os.makedirs("uploads", exist_ok=True)
 app = FastAPI(title="Student Placement Tracker API")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://resumestoragefordevops.s3-website-us-east-1.amazonaws.com,http://localhost:5173,http://127.0.0.1:5173"
+).split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
