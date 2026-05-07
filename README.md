@@ -54,7 +54,7 @@ The platform supports:
                          │ AWS RDS PostgreSQL    │
                          │ Managed Database      │
                          └──────────────────────┘
-
+```
 🧰 Tech Stack
 Frontend
 ->React
@@ -76,14 +76,83 @@ DevOps & Cloud
 ->GitHub Actions
 
 ☁️ AWS Services Used
-Service	Purpose
-Amazon S3	Hosts the React frontend as a static website
-Amazon EC2	Runs the FastAPI backend Docker container
-Amazon RDS	Managed PostgreSQL database
-Amazon ECR	Stores backend Docker images
-IAM	Manages access for GitHub Actions and AWS resources
-Security Groups	Controls network access between services
 
+Amazon S3 -	Hosts the React frontend as a static website
+Amazon EC2 - Runs the FastAPI backend Docker container
+Amazon RDS - Managed PostgreSQL database
+Amazon ECR - Stores backend Docker images
+
+
+🔐 Environment Variables
+
+Environment files are not committed to GitHub.
+
+Backend Environment
+
+Create this file on the EC2 server:
+
+backend.env
+
+Example:
+
+DATABASE_URL=postgresql://postgres:<password>@<rds-endpoint>:5432/postgres
+SECRET_KEY=<your-secret-key>
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+ALLOWED_ORIGINS=http://resumestoragefordevops.s3-website-us-east-1.amazonaws.com
+AWS_REGION=us-east-1
+AWS_S3_BUCKET_NAME=resumestoragefordevops
+Frontend GitHub Secrets
+
+Configured in:
+
+GitHub Repository → Settings → Secrets and variables → Actions
+
+Required secrets:
+
+VITE_API_URL=http://<EC2_PUBLIC_IP>:8000
+VITE_API_BASE_URL=http://<EC2_PUBLIC_IP>:8000
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+AWS_REGION
+AWS_S3_BUCKET_NAME
+AWS_CLOUDFRONT_ID
+
+🐳 Backend Docker Deployment
+Build Docker Image
+cd backend
+docker build -t placement-backend .
+Run Backend Container
+docker rm -f placement-backend 2>/dev/null || true
+
+docker run -d \
+  --name placement-backend \
+  --restart unless-stopped \
+  --env-file backend.env \
+  -p 8000:8000 \
+  placement-backend
+Test Backend
+curl http://localhost:8000
+
+Expected response:
+
+{
+  "message": "Student Placement Tracker Backend is running",
+  "database": "Connected successfully"
+}
+🌐 Frontend Deployment
+
+The frontend is built with Vite and deployed to AWS S3.
+
+Build Frontend
+cd frontend
+npm install
+npm run build
+Deploy to S3
+aws s3 sync ./frontend/dist s3://resumestoragefordevops --delete
+S3 Static Website Configuration
+
+Set the following in the S3 bucket static website hosting
 Default Admin
 Email: admin@example.com
 Password: admin123
