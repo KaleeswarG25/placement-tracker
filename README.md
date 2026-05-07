@@ -68,10 +68,11 @@ The project focuses on practical DevOps implementation:
 | Logging          | Loki, Promtail                               |
 
 ⚙️ CI/CD Pipeline
-Frontend
-GitHub Push → Build React App → Deploy to AWS S3
-Backend
-GitHub Push → Build Docker Image → Push to AWS ECR → SSH into EC2 → Pull Image → Restart Container
+Frontend<br />
+GitHub Push → Build React App → Deploy to AWS S3 <br />
+
+Backend <br />
+GitHub Push → Build Docker Image → Push to AWS ECR → SSH into EC2 → Pull Image → Restart Container<br />
 
 📊 Monitoring & Logging
 
@@ -85,58 +86,54 @@ The project includes a complete observability setup.
 | Loki          | Stores logs                              |
 | Promtail      | Collects Docker logs                     |
 
-Grafana dashboards used:
-
-1860  - Node Exporter Full
-14282 - cAdvisor Docker Monitoring
-
-Loki query:
+Grafana dashboards used:        1860  - Node Exporter Full   &  14282 - cAdvisor Docker Monitoring <br />
+Loki query:<br />
 
 {job="docker"}
+<br />
+🔐 Environment Variables<br />
 
-🔐 Environment Variables
+Backend environment on EC2<br />
+DATABASE_URL=postgresql://postgres:<password>@<rds-endpoint>:5432/postgres<br />
+SECRET_KEY=<secret-key><br />
+ALGORITHM=HS256<br />
+ACCESS_TOKEN_EXPIRE_MINUTES=1440<br />
+ALLOWED_ORIGINS=<s3-bucket static hosting url><br />
+AWS_REGION=<your-region><br />
+AWS_S3_BUCKET_NAME=resumestoragefordevops<use-your-s3><br />
+<br />
+:wrench:GitHub Secrets<br />
+AWS_ACCESS_KEY_ID<br />
+AWS_SECRET_ACCESS_KEY<br />
+AWS_REGION<br />
+AWS_S3_BUCKET_NAME<br />
+EC2_HOST<br />
+EC2_USER<br />
+EC2_SSH_KEY<br />
+VITE_API_URL-<s3-bucket static hosting url><br />
+VITE_API_BASE_URL-<s3-bucket static hosting url><br />
 
-Backend environment on EC2
-DATABASE_URL=postgresql://postgres:<password>@<rds-endpoint>:5432/postgres
-SECRET_KEY=<secret-key>
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-ALLOWED_ORIGINS=<s3-bucket static hosting url>
-AWS_REGION=<your-region>
-AWS_S3_BUCKET_NAME=resumestoragefordevops<use-your-s3>
+🐳 Run Backend Container<br />
+cd backend<br />
+docker build -t placement-backend .<br />
 
-GitHub Secrets
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-AWS_REGION
-AWS_S3_BUCKET_NAME
-EC2_HOST
-EC2_USER
-EC2_SSH_KEY
-VITE_API_URL-<s3-bucket static hosting url>
-VITE_API_BASE_URL-<s3-bucket static hosting url>
+docker run -d \<br />
+  --name placement-backend \<br />
+  --restart unless-stopped \<br />
+  --env-file backend.env \<br />
+  -p 8000:8000 \<br />
+  placement-backend<br />
 
-🐳 Run Backend Container
-cd backend
-docker build -t placement-backend .
+🌐 Frontend Deployment<br />
+cd frontend<br />
+npm install<br />
+npm run build<br />
+aws s3 sync ./dist s3://resumestoragefordevops --delete<br />
+S3 static website enable<br />
 
-docker run -d \
-  --name placement-backend \
-  --restart unless-stopped \
-  --env-file backend.env \
-  -p 8000:8000 \
-  placement-backend
-
-🌐 Frontend Deployment
-cd frontend
-npm install
-npm run build
-aws s3 sync ./dist s3://resumestoragefordevops --delete
-S3 static website enable
-
-Default Admin credential
-Email: admin@example.com
-Password: admin123
+Default Admin credential<br />
+Email: admin@example.com<br />
+Password: admin123<br />
 
 
 
