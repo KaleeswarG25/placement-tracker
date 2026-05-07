@@ -1,36 +1,35 @@
 # 🎓 Student Placement Tracker
 
-![React](https://img.shields.io/badge/Frontend-React-blue?style=for-the-badge&logo=react)
-![FastAPI](https://img.shields.io/badge/Backend-FastAPI-green?style=for-the-badge&logo=fastapi)
-![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue?style=for-the-badge&logo=postgresql)
-![Docker](https://img.shields.io/badge/Container-Docker-blue?style=for-the-badge&logo=docker)
-![AWS](https://img.shields.io/badge/Cloud-AWS-orange?style=for-the-badge&logo=amazonaws)
-![GitHub Actions](https://img.shields.io/badge/CI/CD-GitHub_Actions-black?style=for-the-badge&logo=githubactions)
+A full-stack placement management application deployed on AWS with Docker, CI/CD, monitoring, and centralized logging.
 
-A full-stack **Student Placement Tracker** application deployed on AWS using modern DevOps practices.
-
-This project demonstrates cloud deployment, containerization, CI/CD automation, database integration, and production-style environment configuration using **React, FastAPI, Docker, AWS EC2, S3, RDS, ECR, and GitHub Actions**.
-
----
-
-## 📌 Project Overview
-
-Student Placement Tracker is a web-based application designed to manage placement-related activities for students, companies, and administrators.
-
-The platform supports:
-
-- Student registration and login
-- Company registration
-- Admin authentication
-- Company approval workflow
-- Role-based access
-- Backend API integration
-- Cloud-hosted frontend and backend
-- PostgreSQL database connectivity
+<p align="center">
+  <img src="https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/Database-PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Cloud-AWS-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white" />
+  <img src="https://img.shields.io/badge/CI/CD-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" />
+  <img src="https://img.shields.io/badge/Monitoring-Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white" />
+</p>
 
 ---
 
-## 🏗️ Architecture
+## 🚀 Overview
+
+Student Placement Tracker is a cloud-deployed web application for managing placement-related workflows between students, companies, and administrators.
+
+The project focuses on practical DevOps implementation:
+
+- AWS-based deployment
+- Dockerized backend
+- Automated CI/CD pipelines
+- Managed PostgreSQL database
+- Monitoring with Grafana and Prometheus
+- Centralized logs with Loki and Promtail
+
+---
+
+## 🧱 Architecture
+
 
 ```txt
                          ┌──────────────────────┐
@@ -55,75 +54,71 @@ The platform supports:
                          │ Managed Database      │
                          └──────────────────────┘
 ```
-🧰 Tech Stack
+🛠️ Tech Stack
+
+| Area             | Tools                                        |
+| ---------------- | -------------------------------------------- |
+| Frontend         | React, Vite, Axios                           |
+| Backend          | FastAPI, Python, SQLAlchemy                  |
+| Database         | PostgreSQL, AWS RDS                          |
+| Cloud            | AWS S3, EC2, ECR, RDS                        |
+| CI/CD            | GitHub Actions                               |
+| Containerization | Docker                                       |
+| Monitoring       | Prometheus, Grafana, Node Exporter, cAdvisor |
+| Logging          | Loki, Promtail                               |
+
+⚙️ CI/CD Pipeline
 Frontend
-->React
-->Axios
-->JavaScript
-->AWS S3 Static Website Hosting
+GitHub Push → Build React App → Deploy to AWS S3
 Backend
-->FastAPI
-->Python
-->JWT Authentication
-->Docker
-->Database
-DevOps & Cloud
-->AWS EC2
-->AWS S3
-->AWS RDS
-->AWS ECR
-->Docker
-->GitHub Actions
+GitHub Push → Build Docker Image → Push to AWS ECR → SSH into EC2 → Pull Image → Restart Container
 
-☁️ AWS Services Used
+📊 Monitoring & Logging
 
-Amazon S3 -	Hosts the React frontend as a static website
-Amazon EC2 - Runs the FastAPI backend Docker container
-Amazon RDS - Managed PostgreSQL database
-Amazon ECR - Stores backend Docker images
+The project includes a complete observability setup.
+| Tool          | Purpose                                  |
+| ------------- | ---------------------------------------- |
+| Prometheus    | Collects metrics                         |
+| Grafana       | Displays dashboards                      |
+| Node Exporter | Monitors EC2 CPU, RAM, disk, and network |
+| cAdvisor      | Monitors Docker containers               |
+| Loki          | Stores logs                              |
+| Promtail      | Collects Docker logs                     |
 
+Grafana dashboards used:
+
+1860  - Node Exporter Full
+14282 - cAdvisor Docker Monitoring
+
+Loki query:
+
+{job="docker"}
 
 🔐 Environment Variables
 
-Environment files are not committed to GitHub.
-
-Backend Environment
-
-Create this file on the EC2 server:
-
-backend.env
-
-Example:
-
+Backend environment on EC2
 DATABASE_URL=postgresql://postgres:<password>@<rds-endpoint>:5432/postgres
-SECRET_KEY=<your-secret-key>
+SECRET_KEY=<secret-key>
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
-ALLOWED_ORIGINS=http://resumestoragefordevops.s3-website-us-east-1.amazonaws.com
-AWS_REGION=us-east-1
-AWS_S3_BUCKET_NAME=resumestoragefordevops
-Frontend GitHub Secrets
+ALLOWED_ORIGINS=<s3-bucket static hosting url>
+AWS_REGION=<your-region>
+AWS_S3_BUCKET_NAME=resumestoragefordevops<use-your-s3>
 
-Configured in:
-
-GitHub Repository → Settings → Secrets and variables → Actions
-
-Required secrets:
-
-VITE_API_URL=http://<EC2_PUBLIC_IP>:8000
-VITE_API_BASE_URL=http://<EC2_PUBLIC_IP>:8000
+GitHub Secrets
 AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY
 AWS_REGION
 AWS_S3_BUCKET_NAME
-AWS_CLOUDFRONT_ID
+EC2_HOST
+EC2_USER
+EC2_SSH_KEY
+VITE_API_URL-<s3-bucket static hosting url>
+VITE_API_BASE_URL-<s3-bucket static hosting url>
 
-🐳 Backend Docker Deployment
-Build Docker Image
+🐳 Run Backend Container
 cd backend
 docker build -t placement-backend .
-Run Backend Container
-docker rm -f placement-backend 2>/dev/null || true
 
 docker run -d \
   --name placement-backend \
@@ -131,32 +126,17 @@ docker run -d \
   --env-file backend.env \
   -p 8000:8000 \
   placement-backend
-Test Backend
-curl http://localhost:8000
 
-Expected response:
-
-{
-  "message": "Student Placement Tracker Backend is running",
-  "database": "Connected successfully"
-}
 🌐 Frontend Deployment
-
-The frontend is built with Vite and deployed to AWS S3.
-
-Build Frontend
 cd frontend
 npm install
 npm run build
-Deploy to S3
-aws s3 sync ./frontend/dist s3://resumestoragefordevops --delete
-S3 Static Website Configuration
+aws s3 sync ./dist s3://resumestoragefordevops --delete
+S3 static website enable
 
-Set the following in the S3 bucket static website hosting
-Default Admin
+Default Admin credential
 Email: admin@example.com
 Password: admin123
 
-For production use, the admin password should be changed immediately.
 
 
