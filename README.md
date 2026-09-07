@@ -28,6 +28,15 @@ The project focuses on practical DevOps implementation:
 
 ---
 
+## ✨ Key Features
+- Student registration and profile management
+- Company and placement management
+- Placement application tracking
+- Resume upload
+- Admin dashboard
+- Role-based authentication
+- Placement status tracking
+
 ## 🧱 Architecture
 
 
